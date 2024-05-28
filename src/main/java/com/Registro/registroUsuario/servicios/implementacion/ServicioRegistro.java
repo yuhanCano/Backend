@@ -1,6 +1,7 @@
 package com.Registro.registroUsuario.servicios.implementacion;
 
 import com.Registro.registroUsuario.dto.UsuarioDto;
+import com.Registro.registroUsuario.dto.UsuarioLoginDto;
 import com.Registro.registroUsuario.entity.RegistroEntity;
 import com.Registro.registroUsuario.repositorio.RegistroRepositorio;
 import com.Registro.registroUsuario.servicios.RegistroUsuario;
@@ -13,7 +14,7 @@ import java.util.Optional;
 @Service
 public class ServicioRegistro implements RegistroUsuario {
     @Autowired
-    private RegistroRepositorio respositorioUsuario;
+    private RegistroRepositorio repositorioUsuario;
 
     @Override
     public UsuarioDto guardarUsuario(UsuarioDto usuarioDto) {
@@ -25,7 +26,7 @@ public class ServicioRegistro implements RegistroUsuario {
                 .confirmarContraseña(usuarioDto.getConfirmarContraseña())
                 .build();
 
-        RegistroEntity guardar = respositorioUsuario.save(usuarioEntity);
+        RegistroEntity guardar = repositorioUsuario.save(usuarioEntity);
 
         return UsuarioDto.builder()
                 .idUser(guardar.getIdUser())
@@ -34,12 +35,11 @@ public class ServicioRegistro implements RegistroUsuario {
                 .contraseña(guardar.getContraseña())
                 .confirmarContraseña(guardar.getConfirmarContraseña())
                 .build();
-
     }
 
     @Override
     public List<UsuarioDto> obtenerUsuario() {
-        List<RegistroEntity> usuarioEntities = respositorioUsuario.findAll();
+        List<RegistroEntity> usuarioEntities = repositorioUsuario.findAll();
         return usuarioEntities.stream()
                 .map(usuarioEntity -> UsuarioDto.builder()
                         .idUser(usuarioEntity.getIdUser())
@@ -53,7 +53,7 @@ public class ServicioRegistro implements RegistroUsuario {
 
     @Override
     public UsuarioDto obtenerUsuarioId(Integer id) {
-        Optional<RegistroEntity> usuarioEntity = respositorioUsuario.findById(id);
+        Optional<RegistroEntity> usuarioEntity = repositorioUsuario.findById(id);
         return UsuarioDto.builder()
                 .idUser(usuarioEntity.get().getIdUser())
                 .name(usuarioEntity.get().getName())
@@ -65,9 +65,16 @@ public class ServicioRegistro implements RegistroUsuario {
 
     @Override
     public void eliminarUsuario(Integer id) {
-        respositorioUsuario.deleteById(id);
+        repositorioUsuario.deleteById(id);
     }
 
-
-
+    @Override
+    public RegistroEntity autenticarUsuario(UsuarioLoginDto usuarioLoginDto) {
+        Optional<RegistroEntity> usuarioEntity = Optional.ofNullable(repositorioUsuario.findByCorreoElectronico(usuarioLoginDto.getCorreoElectronico()));
+        if (usuarioEntity.isPresent() && usuarioEntity.get().getContraseña().equals(usuarioLoginDto.getContraseña())) {
+            return usuarioEntity.get();
+        }
+        return null;
+    }
 }
+
